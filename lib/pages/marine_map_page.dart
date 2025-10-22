@@ -73,6 +73,12 @@ import 'package:smart_fishing/widgets/fish_info_card.dart';
                     ],
                   );*/
 
+class _FishInfo {
+  final String title, subtitle, description;
+  final String? imageAsset;
+  const _FishInfo(this.title, this.subtitle, this.description, this.imageAsset);
+}
+
 class MarineMapPage extends StatefulWidget {
   const MarineMapPage({super.key});
 
@@ -123,6 +129,54 @@ class _MarineMapPageState extends State<MarineMapPage>
     128,
     255,
   ); // lighter purple for "selected"
+
+  // --- UI/State ---
+  bool _cardOpen = false;
+  static const double _cardHeight = 300; // höjd på kortet (justera)
+  _FishInfo? _currentFish; // data som FishInfoCard visar
+
+  _FishInfo _infoForPoint(LatLng p) {
+    // quick & dirty exempel; lägg ev. en riktig modell
+    final k0 = _ptKey(fishMarkers[0]);
+    final k1 = _ptKey(fishMarkers[1]);
+    final k = _ptKey(p);
+
+    if (k == k0) {
+      return const _FishInfo('Mackerel', 'Very good chance', '''
+🐟 Behavior:
+Mackerel move in schools near the surface hunting small fish. Watch for diving seabirds – that’s usually where they are!
+
+⚙️ Gear & Setup:
+Spinning rod (8–10 ft) with 0.25–0.35 mm line or 10–15 lb braid.
+Mackerel rig (makrillhäckla) or metal lures (20–60 g spoons or jigs).
+Reel in fast or with short jerks – they love speed!
+
+⏰ Best time:
+Early morning or evening when the sea is calm. Cloudy days can be great too.
+
+🪣 Keep your catch fresh:
+Bleed and clean immediately, then store on ice. Mackerel spoils quickly.
+
+⚖️ Rules:
+No license needed for coastal fishing in Sweden, but respect local restrictions and only keep what you’ll use.
+
+💡 Extra tips:
+Polarized sunglasses help spot fish.
+Follow the birds or other anglers – mackerel often move in groups.
+Try moving 50–100 m if the bite stops.
+
+🔥 Fresh mackerel is amazing grilled, smoked, or fried – enjoy your catch!
+''', 'assets/images/mackerel.png');
+    } else if (k == k1) {
+      return const _FishInfo(
+        'Needlefish',
+        'Good chance',
+        '🐟 Behavior: Often near the surface...',
+        'assets/images/needlefish.png',
+      );
+    }
+    return const _FishInfo('Fish', 'Chance unknown', 'No description', null);
+  }
 
   // Depth overlay comes from a public demo WMS (used for examples).
   // The demo WMS server may embed a promotional QR watermark into tiles.
@@ -469,43 +523,11 @@ class _MarineMapPageState extends State<MarineMapPage>
   }
 
   void _openFishInfoFor(LatLng p) {
-    showModalBottomSheet(
-      context: context,
-      showDragHandle: true,
-      isScrollControlled: true, // 👈 viktigt för att få scrollbar sheet
-      backgroundColor: Colors.transparent, // snygg fade runt kortet
-      builder: (_) => const FishInfoCard(
-        title: 'Mackerel',
-        subtitle: 'A good chance',
-        imageAsset: 'assets/images/mackerel.jpeg',
-        description: '''
-🐟 Behavior: 
-Mackerel move in schools near the surface hunting small fish. Watch for diving seabirds – that’s usually where they are!
-
-⚙️ Gear & Setup:
-Spinning rod (8–10 ft) with 0.25–0.35 mm line or 10–15 lb braid
-Mackerel rig or metal lures (20–60 g spoons or jigs)
-Reel in fast or with short jerks – they love speed!
-
-⏰ Best time: Early morning or evening when the sea is calm. Cloudy days can be great too.
-
-🪣 Keep your catch fresh:
-Bleed and clean immediately, then store on ice. Mackerel spoils quickly.
-
-⚖️ Rules:
-No license needed for coastal fishing in Sweden, but respect local restrictions and only keep what you’ll use.
-
-
-💡 Extra tips:
-Polarized sunglasses help spot fish.
-
-Follow the birds or other anglers – mackerel often move in groups.
-Try moving 50–100 m if the bite stops.
-
-🔥 Fresh mackerel is amazing grilled, smoked, or fried – enjoy your catch!
-''',
-      ),
-    );
+    setState(() {
+      _selectedFishKey = _ptKey(p);
+      _currentFish = _infoForPoint(p);
+      _cardOpen = true; // öppna panelen
+    });
   }
 
   @override
@@ -525,153 +547,137 @@ Try moving 50–100 m if the bite stops.
       ),*/
       body: Stack(
         children: [
-          FlutterMap(
-            mapController: _map,
-            options: MapOptions(
-              initialCenter: _center,
-              initialZoom: 15,
-              maxZoom: 19,
-              minZoom: 5,
-              onMapEvent: (e) {
-                // Uppdatera center kontinuerligt
-                if (e is MapEventMove || e is MapEventRotate) {
-                  setState(() {
-                    _center = _map.camera.center;
-                    _mapRotation = _map.camera.rotation;
-                  });
-                }
-                // När användaren "slutar" – trigga vindhämtning (debounce)
-                if (e is MapEventMoveEnd ||
-                    e is MapEventFlingAnimationEnd ||
-                    e is MapEventDoubleTapZoomEnd) {
-                  _scheduleWindFetch(_map.camera.center);
-                }
-              },
-              onTap: (tapPos, latLng) {
-                // Tap anywhere on the map background -> clear selection
-                if (_selectedFishKey != null) {
-                  setState(() => _selectedFishKey = null);
-                }
-              },
-            ),
-            children: [
-              // 1) Bas - MapTiler Satellite
-              TileLayer(
-                urlTemplate:
-                    'https://api.maptiler.com/tiles/satellite/{z}/{x}/{y}.jpg?key=ReTRE6bb9rBMk3GASouP',
-                userAgentPackageName: 'com.smartfishing.app',
-                tileProvider: NetworkTileProvider(),
+          AnimatedPadding(
+            duration: const Duration(milliseconds: 240),
+            curve: Curves.easeOut,
+            padding: EdgeInsets.only(bottom: _cardOpen ? _cardHeight + 16 : 0),
+            child: FlutterMap(
+              mapController: _map,
+              options: MapOptions(
+                initialCenter: _center,
+                initialZoom: 15,
+                maxZoom: 19,
+                minZoom: 5,
+                onMapEvent: (e) {
+                  // Uppdatera center kontinuerligt
+                  if (e is MapEventMove || e is MapEventRotate) {
+                    setState(() {
+                      _center = _map.camera.center;
+                      _mapRotation = _map.camera.rotation;
+                    });
+                  }
+                  // När användaren "slutar" – trigga vindhämtning (debounce)
+                  if (e is MapEventMoveEnd ||
+                      e is MapEventFlingAnimationEnd ||
+                      e is MapEventDoubleTapZoomEnd) {
+                    _scheduleWindFetch(_map.camera.center);
+                  }
+                },
+                onTap: (tapPos, latLng) {
+                  // Tap anywhere on the map background -> clear selection
+                  if (_selectedFishKey != null) {
+                    setState(() => _selectedFishKey = null);
+                  }
+                },
               ),
-
-              // Djupkonturer (WMS overlay). We use a small WMS tile provider that
-              // converts z/x/y -> BBOX (EPSG:3857) and calls a WMS GetMap request.
-              // Example public WMS server (read-only demo): ows.terrestris.de
-              if (_showDepth)
+              children: [
+                // 1) Bas - MapTiler Satellite
                 TileLayer(
-                  // urlTemplate is unused by WmsTileProvider, but flutter_map
-                  // expects a template string; set to an empty string.
-                  urlTemplate: '',
+                  urlTemplate:
+                      'https://api.maptiler.com/tiles/satellite/{z}/{x}/{y}.jpg?key=ReTRE6bb9rBMk3GASouP',
                   userAgentPackageName: 'com.smartfishing.app',
-                  tileProvider: WmsTileProvider(
-                    baseUrl: 'https://ows.terrestris.de/osm/service?',
-                    layers: 'OSM-WMS',
-                    version: '1.3.0',
-                    format: 'image/png',
-                    transparent: true,
-                    crs: 'EPSG:3857',
-                    tileSize: 256,
-                  ),
+                  tileProvider: NetworkTileProvider(),
                 ),
 
-              // 3) Egna markörer (exempel)
-              MarkerLayer(
-                markers: [
-                  // --- klickbara fiskmarkörer ---
-                  // Colors
-                  ...fishMarkers.map((p) {
-                    final key = _ptKey(p);
-                    final isSelected = (key == _selectedFishKey);
+                // Djupkonturer (WMS overlay). We use a small WMS tile provider that
+                // converts z/x/y -> BBOX (EPSG:3857) and calls a WMS GetMap request.
+                // Example public WMS server (read-only demo): ows.terrestris.de
+                if (_showDepth)
+                  TileLayer(
+                    // urlTemplate is unused by WmsTileProvider, but flutter_map
+                    // expects a template string; set to an empty string.
+                    urlTemplate: '',
+                    userAgentPackageName: 'com.smartfishing.app',
+                    tileProvider: WmsTileProvider(
+                      baseUrl: 'https://ows.terrestris.de/osm/service?',
+                      layers: 'OSM-WMS',
+                      version: '1.3.0',
+                      format: 'image/png',
+                      transparent: true,
+                      crs: 'EPSG:3857',
+                      tileSize: 256,
+                    ),
+                  ),
 
-                    return Marker(
-                      point: p,
-                      width: 42,
-                      height: 42,
-                      child: GestureDetector(
-                        behavior: HitTestBehavior
-                            .translucent, // tap without blocking drag too much
-                        onTap: () {
-                          setState(() {
-                            // Tap a fish: select it. If you tap the same again, toggle back (optional).
-                            _selectedFishKey = isSelected ? null : key;
-                          });
-                          // Here is where you can open your info panel/bottom sheet if you want.
-                          if (!isSelected) _openFishInfoFor(p);
-                        },
-                        child: AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 200),
-                          switchInCurve: Curves.easeOut,
-                          switchOutCurve: Curves.easeIn,
-                          transitionBuilder: (child, anim) =>
-                              ScaleTransition(scale: anim, child: child),
-                          child: SvgPicture.asset(
-                            isSelected
-                                ? 'assets/icons/fish_single.svg'
-                                : 'assets/icons/fish_group.svg',
-                            key: ValueKey(isSelected),
-                            colorFilter: ColorFilter.mode(
-                              isSelected ? _fishSelected : _fishColor,
-                              BlendMode.srcIn,
+                // 3) Egna markörer (exempel)
+                MarkerLayer(
+                  markers: [
+                    // --- klickbara fiskmarkörer ---
+                    // Colors
+                    ...fishMarkers.map((p) {
+                      final key = _ptKey(p);
+                      final isSelected = (key == _selectedFishKey);
+
+                      return Marker(
+                        point: p,
+                        width: 42,
+                        height: 42,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior
+                              .translucent, // tap without blocking drag too much
+                          onTap: () {
+                            setState(() {
+                              // Tap a fish: select it. If you tap the same again, toggle back (optional).
+                              _selectedFishKey = isSelected ? null : key;
+                            });
+                            // Here is where you can open your info panel/bottom sheet if you want.
+                            if (!isSelected) _openFishInfoFor(p);
+                          },
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 200),
+                            switchInCurve: Curves.easeOut,
+                            switchOutCurve: Curves.easeIn,
+                            transitionBuilder: (child, anim) =>
+                                ScaleTransition(scale: anim, child: child),
+                            child: SvgPicture.asset(
+                              isSelected
+                                  ? 'assets/icons/fish_single.svg'
+                                  : 'assets/icons/fish_group.svg',
+                              key: ValueKey(isSelected),
+                              colorFilter: ColorFilter.mode(
+                                isSelected ? _fishSelected : _fishColor,
+                                BlendMode.srcIn,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    );
-                  }),
+                      );
+                    }),
 
-                  Marker(
-                    point: suggestedFishingSpots[0],
-                    child: Icon(
-                      size: 30,
-                      Icons.location_pin,
-                      color: const Color.fromARGB(255, 204, 124, 27),
-                    ),
-                  ),
-
-                  Marker(
-                    point: suggestedFishingSpots[1],
-                    child: Icon(
-                      size: 30,
-                      Icons.location_pin,
-                      color: const Color.fromARGB(255, 7, 63, 34),
-                    ),
-                  ),
-
-                  //----------- fake location marker to prototype ------
-                  Marker(
-                    point: const LatLng(57.58904456033999, 11.902849366307418),
-                    width: 12,
-                    height: 12,
-                    child: Container(
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: Colors.blueAccent,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.blueGrey, width: 2),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withAlpha((0.25 * 255).round()),
-                            blurRadius: 6,
-                            offset: const Offset(2, 2),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  //----------- correct location marker -------
-                  if (_userPos != null)
                     Marker(
-                      point: _userPos!,
+                      point: suggestedFishingSpots[0],
+                      child: Icon(
+                        size: 30,
+                        Icons.location_pin,
+                        color: const Color.fromARGB(255, 204, 124, 27),
+                      ),
+                    ),
+
+                    Marker(
+                      point: suggestedFishingSpots[1],
+                      child: Icon(
+                        size: 30,
+                        Icons.location_pin,
+                        color: const Color.fromARGB(255, 223, 10, 10),
+                      ),
+                    ),
+
+                    //----------- fake location marker to prototype ------
+                    Marker(
+                      point: const LatLng(
+                        57.58904456033999,
+                        11.902849366307418,
+                      ),
                       width: 12,
                       height: 12,
                       child: Container(
@@ -692,33 +698,61 @@ Try moving 50–100 m if the bite stops.
                         ),
                       ),
                     ),
-                ],
-              ),
 
-              // --- Vind: marker + overlay ---
-              FutureBuilder<_WindData?>(
-                future: _windFuture,
-                builder: (context, snap) {
-                  final wind = snap.data;
+                    //----------- correct location marker -------
+                    if (_userPos != null)
+                      Marker(
+                        point: _userPos!,
+                        width: 12,
+                        height: 12,
+                        child: Container(
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: Colors.blueAccent,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Colors.blueGrey,
+                              width: 2,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withAlpha(
+                                  (0.25 * 255).round(),
+                                ),
+                                blurRadius: 6,
+                                offset: const Offset(2, 2),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
 
-                  // Fallbacks om inget finns ännu
-                  final double speed = wind?.speedMs ?? 0;
-                  final double dirTo = wind?.directionDegTo ?? 0;
+                // --- Vind: marker + overlay ---
+                FutureBuilder<_WindData?>(
+                  future: _windFuture,
+                  builder: (context, snap) {
+                    final wind = snap.data;
 
-                  return Positioned(
-                    left: 12,
-                    top: 12 + MediaQuery.of(context).padding.top,
-                    child: _WindBadge(
-                      speedMs: speed,
-                      dirToDegrees: dirTo,
-                      mapRotation: _mapRotation,
-                    ),
-                  );
-                },
-              ),
-            ],
+                    // Fallbacks om inget finns ännu
+                    final double speed = wind?.speedMs ?? 0;
+                    final double dirTo = wind?.directionDegTo ?? 0;
+
+                    return Positioned(
+                      left: 12,
+                      top: 12 + MediaQuery.of(context).padding.top,
+                      child: _WindBadge(
+                        speedMs: speed,
+                        dirToDegrees: dirTo,
+                        mapRotation: _mapRotation,
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
-
           // --- Zoom-knappar ---
           Positioned(
             right: 12,
@@ -802,6 +836,40 @@ Try moving 50–100 m if the bite stops.
                 ),
               ),
             ),
+          // --- Fish info panel ---
+          AnimatedPositioned(
+            duration: const Duration(milliseconds: 240),
+            curve: Curves.easeOut,
+            left: 0,
+            right: 0,
+            // när stängd ligger den utanför skärmen
+            bottom: _cardOpen ? 0 : -(_cardHeight + 100),
+            child: IgnorePointer(
+              ignoring: !_cardOpen, // låt touch gå igenom när den är stängd
+              child: SafeArea(
+                top: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                  child: Material(
+                    elevation: 6,
+                    borderRadius: BorderRadius.circular(18),
+                    clipBehavior: Clip.antiAlias,
+                    child: SizedBox(
+                      height: _cardHeight,
+                      child: (_currentFish == null)
+                          ? const SizedBox.shrink()
+                          : FishInfoCard(
+                              title: _currentFish!.title,
+                              subtitle: _currentFish!.subtitle,
+                              description: _currentFish!.description,
+                              imageAsset: _currentFish!.imageAsset,
+                            ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(

@@ -29,7 +29,6 @@ class FishInfoCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(18),
           child: SizedBox(
             // 🟣 Fast höjd på kortet — t.ex. 60% av skärmen
-            height: screenHeight * 0.6,
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: SingleChildScrollView(
@@ -55,7 +54,7 @@ class FishInfoCard extends StatelessWidget {
                     ),
 
                     if (imageAsset != null) ...[
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 8),
                       ClipRRect(
                         borderRadius: BorderRadius.circular(12),
                         child: Image.asset(
@@ -69,7 +68,7 @@ class FishInfoCard extends StatelessWidget {
                       ),
                     ],
 
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 2),
                     Text(
                       description,
                       style: const TextStyle(fontSize: 15, height: 1.5),
