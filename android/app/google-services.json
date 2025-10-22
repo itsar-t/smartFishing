@@ -1,0 +1,82 @@
+{
+  "project_info": {
+    "project_number": "178466110297",
+    "project_id": "fishing-app-cls055",
+    "storage_bucket": "fishing-app-cls055.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:178466110297:android:814ad2bf1c7b6cdde22a48",
+        "android_client_info": {
+          "package_name": "com.example.fishing_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "178466110297-c7c0j6n9cvodgdl7270t3lload8nht0b.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDGy5WaYALxF1LvCRohFsFzsZZl9AWy1yY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "178466110297-c7c0j6n9cvodgdl7270t3lload8nht0b.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "178466110297-c7khnugvss509ki04pbn5opncgccrijp.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.smartFishing"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:178466110297:android:20f6f83511861e1ce22a48",
+        "android_client_info": {
+          "package_name": "com.example.smart_fishing"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "178466110297-c7c0j6n9cvodgdl7270t3lload8nht0b.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDGy5WaYALxF1LvCRohFsFzsZZl9AWy1yY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "178466110297-c7c0j6n9cvodgdl7270t3lload8nht0b.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "178466110297-c7khnugvss509ki04pbn5opncgccrijp.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.smartFishing"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

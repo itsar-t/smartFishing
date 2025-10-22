@@ -1,0 +1,28 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "fishing-app-cls055",
+          "appId": "1:178466110297:android:20f6f83511861e1ce22a48",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "fishing-app-cls055",
+          "configurations": {
+            "android": "1:178466110297:android:20f6f83511861e1ce22a48",
+            "ios": "1:178466110297:ios:ed40f426074773d4e22a48",
+            "macos": "1:178466110297:ios:ed40f426074773d4e22a48",
+            "web": "1:178466110297:web:7142e3a839b86adce22a48",
+            "windows": "1:178466110297:web:a52a38e92bbc92dfe22a48"
+          }
+        }
+      }
+    }
+  },
+  "storage": {
+    "rules": "storage.rules"
+  }
+}
