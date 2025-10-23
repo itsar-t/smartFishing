@@ -90,6 +90,27 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  Future<void> _signInAsGuest() async {
+    try {
+      await _auth.signInAnonymously();
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Logged in as guest")));
+
+      // Navigera till din huvudskärm
+      Navigator.pushReplacementNamed(context, '/home');
+    } on FirebaseAuthException catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.message ?? "Failed to sign in as guest"),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -221,6 +242,17 @@ class _LoginPageState extends State<LoginPage> {
                                 color: Theme.of(
                                   context,
                                 ).colorScheme.primaryContainer,
+                              ),
+                            ),
+                          ),
+
+                          TextButton(
+                            onPressed: _signInAsGuest,
+                            child: Text(
+                              "Continue as Guest",
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onPrimary,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ),

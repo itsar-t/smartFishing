@@ -2,10 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-/// Register page matching the LoginPage layout:
-/// - Logo pinned to the top
-/// - Form + button pinned to the bottom (even on tall screens)
-/// - Still scrollable so nothing gets hidden behind the keyboard
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
 
@@ -14,37 +10,31 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
-  // Controllers
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  // Firebase refs
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
   void dispose() {
-    // Always dispose to avoid leaks
     _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  /// Creates a user account:
-  /// 1) Validates inputs
-  /// 2) Ensures username is unique (case-insensitive)
-  /// 3) Creates Firebase Auth user
-  /// 4) Stores username/email in Firestore under /users/{uid}
   Future<void> _signUp() async {
-    final username = _usernameController.text.trim();
+    String username = _usernameController.text.trim();
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
-    // Basic client-side checks for nicer UX
-    if (username.isEmpty || email.isEmpty || password.isEmpty) {
-      _showError('Fyll i alla fält.');
+    if (username.isEmpty && email.contains('@')) {
+      username = email.split('@').first;
+    }
+    if (email.isEmpty || password.isEmpty) {
+      _showError('Fyll i både e-post och lösenord.');
       return;
     }
     if (username.contains('@')) {
@@ -57,49 +47,85 @@ class _RegisterPageState extends State<RegisterPage> {
     }
 
     try {
-      // 1) Ensure username uniqueness (case-insensitive)
+      // Kolla att username är ledigt
       final existing = await _firestore
           .collection('users')
           .where('username', isEqualTo: username.toLowerCase())
           .limit(1)
           .get();
-
       if (existing.docs.isNotEmpty) {
         _showError('Användarnamnet är redan taget.');
         return;
       }
 
-      // 2) Create auth user
-      final cred = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      final currentUser = _auth.currentUser;
 
-      final user = cred.user;
-      if (user == null) {
-        _showError('Kunde inte skapa användare, försök igen.');
-        return;
+      // --- 1) AUTH: antingen länka gäst eller skapa nytt ---
+      User user;
+      if (currentUser != null && currentUser.isAnonymous) {
+        final cred = EmailAuthProvider.credential(
+          email: email,
+          password: password,
+        );
+        final linked = await currentUser.linkWithCredential(cred);
+        user = linked.user!;
+        await user.updateDisplayName(username);
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Konto kopplat! Du är inte längre gäst.'),
+          ),
+        );
+      } else {
+        final userCred = await _auth.createUserWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+        user = userCred.user!;
+        await user.updateDisplayName(username);
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Konto skapat!')));
       }
 
-      // 3) Persist profile in Firestore
-      await _firestore.collection('users').doc(user.uid).set({
-        'username': username.toLowerCase(), // store lowercased for lookups
-        'email': email,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
+      // --- 2) FIRESTORE: försök skriva profilen, men blockera inte navigation ---
+      try {
+        await _firestore.collection('users').doc(user.uid).set({
+          'username': username.toLowerCase(),
+          'email': email,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      } catch (e) {
+        // Logga men låt användaren gå vidare – Auth lyckades ju
+        debugPrint('⚠️ Firestore profile write failed: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Konto skapat, men kunde inte spara profil just nu.',
+              ),
+            ),
+          );
+        }
+      }
 
-      // 4) Update display name (nice-to-have)
-      await user.updateDisplayName(username);
-
-      // Optional: send email verification (uncomment if you want this flow)
-      // await user.sendEmailVerification();
-
+      // --- 3) Navigera vidare oavsett profil-skrivningens resultat ---
       if (!mounted) return;
-      // Pop back to Login after a successful registration
-      Navigator.of(context).pop();
+      Navigator.pushNamedAndRemoveUntil(context, '/home', (_) => false);
     } on FirebaseAuthException catch (e) {
-      _showError(e.message ?? 'Okänt fel vid registrering.');
-    } catch (_) {
+      // Visa tydligare auth-fel istället för “något gick fel”
+      final msg = switch (e.code) {
+        'credential-already-in-use' =>
+          'E-postadressen används redan av ett annat konto.',
+        'email-already-in-use' => 'E-postadressen är redan registrerad.',
+        'invalid-email' => 'Ogiltig e-postadress.',
+        'weak-password' => 'Lösenordet är för svagt.',
+        _ => (e.message ?? 'Något gick fel vid inloggning.'),
+      };
+      _showError(msg);
+    } catch (e) {
+      debugPrint('❌ Unexpected error in _signUp: $e');
       _showError('Något gick fel. Försök igen.');
     }
   }
@@ -117,7 +143,6 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Match app background with your theme primary
       backgroundColor: Theme.of(context).colorScheme.primary,
       appBar: AppBar(
         title: const Text(""),
@@ -125,18 +150,15 @@ class _RegisterPageState extends State<RegisterPage> {
         elevation: 0,
       ),
       body: SafeArea(
-        // LayoutBuilder gives us the viewport height → lets us pin bottom section
         child: LayoutBuilder(
           builder: (context, constraints) {
             return SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              // Give Column a **real height** to make spaceBetween work
               child: ConstrainedBox(
                 constraints: BoxConstraints(minHeight: constraints.maxHeight),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // ---------- TOP SECTION ----------
                     Column(
                       children: [
                         Image.asset(
@@ -147,9 +169,6 @@ class _RegisterPageState extends State<RegisterPage> {
                         const SizedBox(height: 24),
                       ],
                     ),
-
-                    // ---------- BOTTOM SECTION ----------
-                    // Keep padding responsive to keyboard to avoid hugging the edge
                     Padding(
                       padding: EdgeInsets.only(
                         bottom: MediaQuery.of(context).viewInsets.bottom * 0.3,
@@ -165,10 +184,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                   ).colorScheme.onPrimary,
                                 ),
                           ),
-
                           const SizedBox(height: 24),
-
-                          // Username
                           TextField(
                             controller: _usernameController,
                             textInputAction: TextInputAction.next,
@@ -176,11 +192,12 @@ class _RegisterPageState extends State<RegisterPage> {
                             style: const TextStyle(color: Colors.white),
                             cursorColor: Colors.white,
                             cursorWidth: 2.0,
-                            decoration: _inputDecoration(context, "Username"),
+                            decoration: _inputDecoration(
+                              context,
+                              "Username (valfritt)",
+                            ),
                           ),
                           const SizedBox(height: 16),
-
-                          // Email
                           TextField(
                             controller: _emailController,
                             keyboardType: TextInputType.emailAddress,
@@ -192,8 +209,6 @@ class _RegisterPageState extends State<RegisterPage> {
                             decoration: _inputDecoration(context, "Email"),
                           ),
                           const SizedBox(height: 16),
-
-                          // Password
                           TextField(
                             controller: _passwordController,
                             obscureText: true,
@@ -205,9 +220,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             cursorWidth: 2.0,
                             decoration: _inputDecoration(context, "Password"),
                           ),
-
                           const SizedBox(height: 30),
-
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
@@ -224,7 +237,6 @@ class _RegisterPageState extends State<RegisterPage> {
                               child: const Text("Create account"),
                             ),
                           ),
-
                           const SizedBox(height: 48),
                         ],
                       ),
@@ -239,7 +251,6 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  // Same decoration helper as LoginPage for consistent styling
   InputDecoration _inputDecoration(BuildContext context, String label) {
     return InputDecoration(
       labelText: label,
@@ -249,7 +260,6 @@ class _RegisterPageState extends State<RegisterPage> {
       ),
       filled: true,
       fillColor: Theme.of(context).colorScheme.primary,
-
       enabledBorder: OutlineInputBorder(
         borderSide: const BorderSide(color: Colors.white, width: 1.0),
         borderRadius: BorderRadius.circular(8.0),

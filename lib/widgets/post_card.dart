@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:smart_fishing/utils/utils.dart';
+import 'package:smart_fishing/utils/capitalize.dart';
 
 class PostCard extends StatelessWidget {
   final String username;
@@ -77,7 +77,7 @@ class PostCard extends StatelessWidget {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(right: 4),
+                  padding: const EdgeInsets.only(right: 8),
                   child: FilledButton.tonal(
                     onPressed: onFollow,
                     style: FilledButton.styleFrom(
@@ -108,7 +108,7 @@ class PostCard extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 _Action(
                   icon: liked ? Icons.favorite : Icons.favorite_border,

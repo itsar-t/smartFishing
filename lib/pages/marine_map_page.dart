@@ -143,24 +143,23 @@ class _MarineMapPageState extends State<MarineMapPage>
 
     if (k == k0) {
       return const _FishInfo('Mackerel', 'Very good chance', '''
-🐟 Behavior:
+🐟 Behavior: 
 Mackerel move in schools near the surface hunting small fish. Watch for diving seabirds – that’s usually where they are!
 
-⚙️ Gear & Setup:
+⚙️ Gear & Setup: 
 Spinning rod (8–10 ft) with 0.25–0.35 mm line or 10–15 lb braid.
 Mackerel rig (makrillhäckla) or metal lures (20–60 g spoons or jigs).
 Reel in fast or with short jerks – they love speed!
 
-⏰ Best time:
+⏰ Best time: 
 Early morning or evening when the sea is calm. Cloudy days can be great too.
 
-🪣 Keep your catch fresh:
+🪣 Keep your catch fresh: 
 Bleed and clean immediately, then store on ice. Mackerel spoils quickly.
 
-⚖️ Rules:
-No license needed for coastal fishing in Sweden, but respect local restrictions and only keep what you’ll use.
+⚖️ Rules: No license needed for coastal fishing in Sweden, but respect local restrictions and only keep what you’ll use.
 
-💡 Extra tips:
+💡 Extra tips: 
 Polarized sunglasses help spot fish.
 Follow the birds or other anglers – mackerel often move in groups.
 Try moving 50–100 m if the bite stops.
@@ -168,12 +167,32 @@ Try moving 50–100 m if the bite stops.
 🔥 Fresh mackerel is amazing grilled, smoked, or fried – enjoy your catch!
 ''', 'assets/images/mackerel.png');
     } else if (k == k1) {
-      return const _FishInfo(
-        'Needlefish',
-        'Good chance',
-        '🐟 Behavior: Often near the surface...',
-        'assets/images/needlefish.png',
-      );
+      return const _FishInfo('Needlefish', 'Good chance', '''
+🐟 Behavior:
+Needlefish are long, slender surface hunters that love clear and calm waters. They often gather near rocks, piers, and shallow bays chasing small baitfish. You can spot them by their quick, silver flashes near the surface.
+
+⚙️ Gear & Setup:
+Light spinning rod (7–9 ft) with 0.20–0.30 mm line or 8–12 lb braid.
+Use small spoons, surface lures, or slender softbaits.
+Retrieve quickly and steadily — needlefish strike fast when they see movement.
+
+⏰ Best time:
+Sunny days and calm seas are perfect. They feed most actively during late morning and evening when baitfish come closer to the surface.
+
+🪣 Keep your catch fresh:
+Needlefish have delicate flesh. Bleed immediately and keep on ice or in cold seawater if you plan to eat them.
+
+⚖️ Rules:
+No license needed for coastal fishing in Sweden, but always respect local restrictions and only keep what you’ll use.
+
+💡 Extra tips:
+Use long pliers when unhooking — their beaks are sharp!
+They often jump when hooked, so keep tension on the line.
+Try smaller lures if they just “nip” the bait — they can be picky.
+
+🔥 Cooking:
+Needlefish have firm, white meat and are delicious grilled or pan-fried. Remove the green-tinted bones before serving — they’re natural and harmless, but look unusual!
+''', 'assets/images/needlefish.png');
     }
     return const _FishInfo('Fish', 'Chance unknown', 'No description', null);
   }
@@ -533,24 +552,12 @@ Try moving 50–100 m if the bite stops.
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      /*appBar: AppBar(
-        title: const Text('Marine Map'),
-        backgroundColor: cs.primary,
-        foregroundColor: cs.onPrimary,
-        actions: [
-          IconButton(
-            tooltip: _showDepth ? 'Göm djup' : 'Visa djup',
-            onPressed: () => setState(() => _showDepth = !_showDepth),
-            icon: Icon(_showDepth ? Icons.layers_clear : Icons.layers),
-          ),
-        ],
-      ),*/
       body: Stack(
         children: [
           AnimatedPadding(
             duration: const Duration(milliseconds: 240),
             curve: Curves.easeOut,
-            padding: EdgeInsets.only(bottom: _cardOpen ? _cardHeight + 16 : 0),
+            padding: EdgeInsets.only(bottom: _cardOpen ? _cardHeight : 0),
             child: FlutterMap(
               mapController: _map,
               options: MapOptions(
@@ -576,7 +583,12 @@ Try moving 50–100 m if the bite stops.
                 onTap: (tapPos, latLng) {
                   // Tap anywhere on the map background -> clear selection
                   if (_selectedFishKey != null) {
-                    setState(() => _selectedFishKey = null);
+                    setState(() {
+                      _selectedFishKey = null; // avmarkera ev. marker
+                      _currentFish =
+                          null; // rensa innehållet i kortet (valfritt)
+                      _cardOpen = false; // 🔒 stäng kortet
+                    });
                   }
                 },
               ),
@@ -780,6 +792,20 @@ Try moving 50–100 m if the bite stops.
             ),
           ),
 
+          //--- Location Button ---
+          Positioned(
+            right: 12,
+            top: 180,
+            child: FloatingActionButton(
+              heroTag: 'current position',
+              mini: true,
+              onPressed: _loadingLocation ? null : _goToCurrentLocation,
+
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              child: Icon(Icons.my_location, color: Colors.white),
+            ),
+          ),
+
           // --- Lagerknapp ---
           Positioned(
             right: 12,
@@ -837,45 +863,30 @@ Try moving 50–100 m if the bite stops.
               ),
             ),
           // --- Fish info panel ---
+          // --- Fish info panel (edge-to-edge, inga rundningar här) ---
           AnimatedPositioned(
             duration: const Duration(milliseconds: 240),
             curve: Curves.easeOut,
             left: 0,
             right: 0,
-            // när stängd ligger den utanför skärmen
             bottom: _cardOpen ? 0 : -(_cardHeight + 100),
             child: IgnorePointer(
-              ignoring: !_cardOpen, // låt touch gå igenom när den är stängd
-              child: SafeArea(
-                top: false,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                  child: Material(
-                    elevation: 6,
-                    borderRadius: BorderRadius.circular(18),
-                    clipBehavior: Clip.antiAlias,
-                    child: SizedBox(
-                      height: _cardHeight,
-                      child: (_currentFish == null)
-                          ? const SizedBox.shrink()
-                          : FishInfoCard(
-                              title: _currentFish!.title,
-                              subtitle: _currentFish!.subtitle,
-                              description: _currentFish!.description,
-                              imageAsset: _currentFish!.imageAsset,
-                            ),
-                    ),
-                  ),
-                ),
+              ignoring: !_cardOpen,
+              child: SizedBox(
+                height: _cardHeight,
+                width: double.infinity,
+                child: _currentFish == null
+                    ? const SizedBox.shrink()
+                    : FishInfoCard(
+                        title: _currentFish!.title,
+                        subtitle: _currentFish!.subtitle,
+                        description: _currentFish!.description,
+                        imageAsset: _currentFish!.imageAsset,
+                      ),
               ),
             ),
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _loadingLocation ? null : _goToCurrentLocation,
-        icon: const Icon(Icons.my_location),
-        label: const Text('My Location'),
       ),
     );
   }

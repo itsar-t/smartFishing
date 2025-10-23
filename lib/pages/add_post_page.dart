@@ -9,9 +9,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// ✅ Samma nyckel kan användas för både Places + Geocoding, så länge båda är aktiverade
-const String kGoogleApiKey = 'AIzaSyA7SG-AFo7zXYaF96hqeOlIMxeOD3g-EUU';
+String get kGoogleApiKey => dotenv.env['GOOGLE_API_KEY'] ?? '';
 
 /// Enkel modell för Places-förslag
 class PlaceSuggestion {
@@ -32,6 +33,19 @@ class _AddPostPageState extends State<AddPostPage> {
   File? _file;
   bool _isUploading = false;
   final TextEditingController _locationCtrl = TextEditingController();
+  @override
+  void initState() {
+    super.initState();
+    if (kGoogleApiKey.isEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Google API-nyckel saknas – kontrollera .env-filen'),
+          ),
+        );
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -61,18 +75,20 @@ class _AddPostPageState extends State<AddPostPage> {
   // ------------------------ PLATS: AUTOCOMPLETE + DETAILS ------------------------
 
   Future<List<PlaceSuggestion>> _fetchAutocomplete(String input) async {
+    if (kGoogleApiKey.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Google API-nyckel saknas')));
+      return [];
+    }
     if (input.trim().isEmpty) return [];
-    final uri = Uri.https(
-      'maps.googleapis.com',
-      '/maps/api/place/autocomplete/json',
-      {
-        'input': input,
-        'key': kGoogleApiKey,
-        // Vill du globalt? Ta bort raden nedan
-        'components': 'country:se',
-        'types': 'geocode',
-      },
-    );
+    final uri =
+        Uri.https('maps.googleapis.com', '/maps/api/place/autocomplete/json', {
+          'input': input,
+          'key': kGoogleApiKey,
+          'components': 'country:se',
+          'types': 'geocode',
+        });
 
     final res = await http.get(uri);
     if (res.statusCode != 200) return [];
@@ -88,8 +104,13 @@ class _AddPostPageState extends State<AddPostPage> {
         .toList();
   }
 
-  /// Hämta “snyggare” text (name + formatted_address) för ett placeId
   Future<String?> _fetchPlaceLabel(String placeId) async {
+    if (kGoogleApiKey.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Google API-nyckel saknas')));
+      return null;
+    }
     final uri = Uri.https(
       'maps.googleapis.com',
       '/maps/api/place/details/json',
@@ -112,6 +133,12 @@ class _AddPostPageState extends State<AddPostPage> {
   // ------------------------ PLATS: CURRENT LOCATION + REVERSE GEOCODING ------------------------
 
   Future<void> _useCurrentLocation() async {
+    if (kGoogleApiKey.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Google API-nyckel saknas')));
+      return;
+    }
     try {
       var perm = await Geolocator.checkPermission();
       if (perm == LocationPermission.denied) {
@@ -126,12 +153,11 @@ class _AddPostPageState extends State<AddPostPage> {
         return;
       }
 
-      final settings = LocationSettings(accuracy: LocationAccuracy.high);
+      final settings = const LocationSettings(accuracy: LocationAccuracy.high);
       final pos = await Geolocator.getCurrentPosition(
         locationSettings: settings,
       );
 
-      // Reverse geocoding med Google Geocoding API
       final uri = Uri.https('maps.googleapis.com', '/maps/api/geocode/json', {
         'latlng': '${pos.latitude},${pos.longitude}',
         'key': kGoogleApiKey,
@@ -229,164 +255,136 @@ class _AddPostPageState extends State<AddPostPage> {
         backgroundColor: cs.primary,
         foregroundColor: cs.onPrimary,
       ),
+
+      // 👇 FIX: Post-knappen flyttar sig automatiskt vid tangentbord
+      bottomNavigationBar: AnimatedPadding(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+        padding: EdgeInsets.only(
+          left: 16,
+          right: 16,
+          top: 8,
+          bottom: MediaQuery.viewInsetsOf(context).bottom + 16,
+        ),
+        child: SafeArea(
+          top: false,
+          child: FilledButton(
+            onPressed: _isUploading ? null : _upload,
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              textStyle: const TextStyle(fontSize: 16),
+            ),
+            child: _isUploading
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Text('Post'),
+          ),
+        ),
+      ),
+
       body: SafeArea(
-        child: Stack(
-          children: [
-            // Centrerat innehåll + scroll när tangentbordet öppnas
-            LayoutBuilder(
-              builder: (context, constraints) {
-                return SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      minHeight: constraints.maxHeight,
-                    ),
-                    child: Center(
-                      child: Padding(
-                        // luft för tangentbord + den fixerade knappen
-                        padding: EdgeInsets.only(
-                          bottom:
-                              MediaQuery.of(context).viewInsets.bottom + 100,
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            if (_file == null)
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: OutlinedButton.icon(
-                                      onPressed: _isUploading
-                                          ? null
-                                          : () =>
-                                                _pickImage(ImageSource.gallery),
-                                      icon: const Icon(Icons.photo),
-                                      label: const Text('Gallery'),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: OutlinedButton.icon(
-                                      onPressed: _isUploading
-                                          ? null
-                                          : () =>
-                                                _pickImage(ImageSource.camera),
-                                      icon: const Icon(Icons.photo_camera),
-                                      label: const Text('Camera'),
-                                    ),
-                                  ),
-                                ],
-                              )
-                            else
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: Stack(
-                                  children: [
-                                    AspectRatio(
-                                      aspectRatio: 4 / 5,
-                                      child: Image.file(
-                                        _file!,
-                                        fit: BoxFit.cover,
-                                      ),
-                                    ),
-                                    Positioned(
-                                      right: 8,
-                                      bottom: 8,
-                                      child: FloatingActionButton.small(
-                                        heroTag: 'changeImageFab',
-                                        backgroundColor: cs.inversePrimary,
-                                        onPressed: _isUploading
-                                            ? null
-                                            : () => _pickImage(
-                                                ImageSource.gallery,
-                                              ),
-                                        child: Icon(
-                                          Icons.swap_horiz,
-                                          color: cs.primary,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-
-                            const SizedBox(height: 16),
-
-                            // 🔎 Autocomplete + 📍 current location
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: TypeAheadField<PlaceSuggestion>(
-                                    controller: _locationCtrl,
-                                    suggestionsCallback: (q) =>
-                                        _fetchAutocomplete(q),
-                                    builder: (context, controller, focusNode) {
-                                      return TextField(
-                                        controller: controller,
-                                        focusNode: focusNode,
-                                        textInputAction: TextInputAction.done,
-                                        decoration: const InputDecoration(
-                                          labelText: 'Location (optional)',
-                                          border: OutlineInputBorder(),
-                                        ),
-                                      );
-                                    },
-                                    itemBuilder: (context, s) => ListTile(
-                                      leading: const Icon(Icons.place),
-                                      title: Text(s.description),
-                                    ),
-                                    onSelected: (s) async {
-                                      var text = s.description;
-                                      final better = await _fetchPlaceLabel(
-                                        s.placeId,
-                                      );
-                                      if (better != null && better.isNotEmpty) {
-                                        text = better;
-                                      }
-                                      setState(() => _locationCtrl.text = text);
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                IconButton.filledTonal(
-                                  onPressed: _useCurrentLocation,
-                                  icon: const Icon(Icons.my_location),
-                                  tooltip: 'Use current location',
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (_file == null)
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: _isUploading
+                            ? null
+                            : () => _pickImage(ImageSource.gallery),
+                        icon: const Icon(Icons.photo),
+                        label: const Text('Gallery'),
                       ),
                     ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: _isUploading
+                            ? null
+                            : () => _pickImage(ImageSource.camera),
+                        icon: const Icon(Icons.photo_camera),
+                        label: const Text('Camera'),
+                      ),
+                    ),
+                  ],
+                )
+              else
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Stack(
+                    children: [
+                      AspectRatio(
+                        aspectRatio: 4 / 5,
+                        child: Image.file(_file!, fit: BoxFit.cover),
+                      ),
+                      Positioned(
+                        right: 8,
+                        bottom: 8,
+                        child: FloatingActionButton.small(
+                          heroTag: 'changeImageFab',
+                          backgroundColor: cs.inversePrimary,
+                          onPressed: _isUploading
+                              ? null
+                              : () => _pickImage(ImageSource.gallery),
+                          child: Icon(Icons.swap_horiz, color: cs.primary),
+                        ),
+                      ),
+                    ],
                   ),
-                );
-              },
-            ),
-
-            // 🔽 Fixerad Post-knapp i botten
-            Positioned(
-              left: 16,
-              right: 16,
-              bottom: 48,
-              child: FilledButton(
-                onPressed: _isUploading ? null : _upload,
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  textStyle: const TextStyle(fontSize: 16),
                 ),
-                child: _isUploading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text('Post'),
+
+              const SizedBox(height: 16),
+
+              // 🔎 Autocomplete + 📍 current location
+              Row(
+                children: [
+                  Expanded(
+                    child: TypeAheadField<PlaceSuggestion>(
+                      controller: _locationCtrl,
+                      suggestionsCallback: (q) => _fetchAutocomplete(q),
+                      builder: (context, controller, focusNode) {
+                        return TextField(
+                          controller: controller,
+                          focusNode: focusNode,
+                          textInputAction: TextInputAction.done,
+                          decoration: const InputDecoration(
+                            labelText: 'Location (optional)',
+                            border: OutlineInputBorder(),
+                          ),
+                        );
+                      },
+                      itemBuilder: (context, s) => ListTile(
+                        leading: const Icon(Icons.place),
+                        title: Text(s.description),
+                      ),
+                      onSelected: (s) async {
+                        var text = s.description;
+                        final better = await _fetchPlaceLabel(s.placeId);
+                        if (better != null && better.isNotEmpty) {
+                          text = better;
+                        }
+                        setState(() => _locationCtrl.text = text);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton.filledTonal(
+                    onPressed: _useCurrentLocation,
+                    icon: const Icon(Icons.my_location),
+                    tooltip: 'Use current location',
+                  ),
+                ],
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
