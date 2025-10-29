@@ -68,10 +68,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _signOut() async {
-    await _auth.signOut();
+    await FirebaseAuth.instance.signOut();
     if (!mounted) return;
-    // tillbaka till login via named route om du vill:
-    // Navigator.pushNamedAndRemoveUntil(context, '/login', (_) => false);
+    Navigator.pushNamedAndRemoveUntil(context, '/login', (_) => false);
   }
 
   @override
