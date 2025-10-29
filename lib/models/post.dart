@@ -1,3 +1,4 @@
+// lib/models/post.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Post {
@@ -6,7 +7,8 @@ class Post {
   final String username;
   final String imageUrl;
   final String locationText;
-  final DateTime createdAt;
+  final String description; // kan vara tom sträng
+  final DateTime? createdAt; // kan vara null innan serverTimestamp fyllts
   final int likesCount;
 
   Post({
@@ -15,6 +17,7 @@ class Post {
     required this.username,
     required this.imageUrl,
     required this.locationText,
+    required this.description,
     required this.createdAt,
     required this.likesCount,
   });
@@ -23,11 +26,14 @@ class Post {
     final d = doc.data()!;
     return Post(
       id: doc.id,
-      userId: d['userId'] as String,
-      username: d['username'] as String,
-      imageUrl: d['imageUrl'] as String,
+      userId: (d['userId'] ?? '') as String,
+      username: (d['username'] ?? '') as String,
+      imageUrl: (d['imageUrl'] ?? '') as String,
       locationText: (d['locationText'] ?? '') as String,
-      createdAt: (d['createdAt'] as Timestamp).toDate(),
+      description: (d['description'] ?? '') as String, // 👈 tom om saknas
+      createdAt: (d['createdAt'] is Timestamp)
+          ? (d['createdAt'] as Timestamp).toDate()
+          : null, // 👈 null om inte satt än
       likesCount: (d['likesCount'] ?? 0) as int,
     );
   }

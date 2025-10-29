@@ -1,10 +1,12 @@
+// lib/widgets/post_card.dart
 import 'package:flutter/material.dart';
 import 'package:smart_fishing/utils/capitalize.dart';
 
-class PostCard extends StatelessWidget {
+class PostCard extends StatefulWidget {
   final String username;
   final String meta; // e.g. "2h • Hovås – Sea"
   final ImageProvider image; // NetworkImage / AssetImage
+  final String? description; // 👈 NYTT: valfritt
   final VoidCallback? onFollow;
   final VoidCallback? onOverflow;
   final VoidCallback? onLike;
@@ -17,6 +19,7 @@ class PostCard extends StatelessWidget {
     required this.username,
     required this.meta,
     required this.image,
+    this.description,
     this.onFollow,
     this.onOverflow,
     this.onLike,
@@ -26,8 +29,22 @@ class PostCard extends StatelessWidget {
   });
 
   @override
+  State<PostCard> createState() => _PostCardState();
+}
+
+class _PostCardState extends State<PostCard> {
+  bool _expanded = false;
+
+  // Enkel heuristik för “lång text” (undvik dyra layoutmätningar).
+  bool get _isLong =>
+      (widget.description?.trim().length ?? 0) >
+      140; // justera gräns om du vill
+
+  @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final hasDesc =
+        (widget.description != null) && widget.description!.trim().isNotEmpty;
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -47,7 +64,8 @@ class PostCard extends StatelessWidget {
                   radius: 18,
                   backgroundColor: cs.inversePrimary,
                   child: Text(
-                    (username.isNotEmpty ? username[0] : '?').toUpperCase(),
+                    (widget.username.isNotEmpty ? widget.username[0] : '?')
+                        .toUpperCase(),
                     style: TextStyle(
                       color: cs.primary,
                       fontWeight: FontWeight.w800,
@@ -60,7 +78,7 @@ class PostCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        capitalize(username),
+                        capitalize(widget.username),
                         style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(
                               fontWeight: FontWeight.w600,
@@ -68,7 +86,7 @@ class PostCard extends StatelessWidget {
                             ),
                       ),
                       Text(
-                        meta,
+                        widget.meta,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: cs.onSurfaceVariant,
                         ),
@@ -77,9 +95,9 @@ class PostCard extends StatelessWidget {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(right: 8),
+                  padding: const EdgeInsets.only(right: 32),
                   child: FilledButton.tonal(
-                    onPressed: onFollow,
+                    onPressed: widget.onFollow,
                     style: FilledButton.styleFrom(
                       visualDensity: VisualDensity.compact,
                       padding: const EdgeInsets.symmetric(
@@ -91,7 +109,7 @@ class PostCard extends StatelessWidget {
                   ),
                 ),
                 IconButton(
-                  onPressed: onOverflow,
+                  onPressed: widget.onOverflow,
                   icon: const Icon(Icons.more_vert),
                 ),
               ],
@@ -101,8 +119,39 @@ class PostCard extends StatelessWidget {
           // Image
           AspectRatio(
             aspectRatio: 3 / 4,
-            child: Ink.image(image: image, fit: BoxFit.cover),
+            child: Ink.image(image: widget.image, fit: BoxFit.cover),
           ),
+
+          // Description (valfri)
+          if (hasDesc) ...[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+              child: Text(
+                widget.description!.trim(),
+                maxLines: _expanded ? null : 3,
+                overflow: _expanded ? TextOverflow.visible : TextOverflow.fade,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: cs.onSurface),
+              ),
+            ),
+            if (_isLong)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton(
+                  onPressed: () => setState(() => _expanded = !_expanded),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  child: Text(_expanded ? 'Show less' : 'Read more'),
+                ),
+              ),
+            const SizedBox(height: 4),
+          ],
 
           // Actions
           Padding(
@@ -111,20 +160,20 @@ class PostCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 _Action(
-                  icon: liked ? Icons.favorite : Icons.favorite_border,
+                  icon: widget.liked ? Icons.favorite : Icons.favorite_border,
                   label: 'Like',
-                  isPrimary: liked,
-                  onTap: onLike,
+                  isPrimary: widget.liked,
+                  onTap: widget.onLike,
                 ),
                 _Action(
                   icon: Icons.chat_bubble_outline,
                   label: 'Comment',
-                  onTap: onComment,
+                  onTap: widget.onComment,
                 ),
                 _Action(
                   icon: Icons.share_outlined,
                   label: 'Share',
-                  onTap: onShare,
+                  onTap: widget.onShare,
                 ),
               ],
             ),

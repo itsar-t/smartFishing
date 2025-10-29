@@ -24,10 +24,14 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+
+	<!-- Launch -->
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
+
+	<!-- Orientation -->
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
@@ -41,9 +45,34 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+
+	<!-- Perf/input -->
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+
+	<!-- iOS PRIVACY PERMISSIONS (systemdialogernas texter) -->
+
+
+	<!-- Kamera (foto/video) -->
+	<key>NSCameraUsageDescription</key>
+	<string>Kameran behövs för att ta bilder och filma dina fångster.</string>
+
+	<!-- Mikrofon (om du filmar med ljud) -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Mikrofonen behövs för att spela in ljud till dina videor.</string>
+
+	<!-- Läsa från fotobiblioteket (rekommenderas även om PHPicker används) -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Åtkomst till foton behövs för att välja och ladda upp bilder från biblioteket.</string>
+
+	<!-- Spara till fotobiblioteket -->
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Behövs för att spara tagna foton och videor i ditt bibliotek.</string>
+
+	<!-- Plats "när appen används" -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Plats används för att tagga fångster och visa dem på kartan.</string>
 </dict>
 </plist>

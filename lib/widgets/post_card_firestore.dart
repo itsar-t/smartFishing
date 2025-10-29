@@ -10,7 +10,10 @@ class PostCardFirestore extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final uid = FirebaseAuth.instance.currentUser!.uid;
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return const SizedBox.shrink(); // säkerhetsnät
+    final uid = user.uid;
+
     final postRef = FirebaseFirestore.instance.collection('posts').doc(postId);
     final likeDocRef = postRef.collection('likes').doc(uid);
 
@@ -31,6 +34,9 @@ class PostCardFirestore extends StatelessWidget {
               username: post.username,
               meta: _meta(post.createdAt, post.locationText),
               image: NetworkImage(post.imageUrl),
+              description: post.description.isEmpty
+                  ? null
+                  : post.description, // 👈 NYTT
               liked: liked,
               onLike: () => _toggleLike(postRef, likeDocRef, liked),
               onComment: () {}, // TODO
@@ -44,14 +50,17 @@ class PostCardFirestore extends StatelessWidget {
     );
   }
 
-  String _meta(DateTime createdAt, String locationText) {
-    final now = DateTime.now();
-    final mins = now.difference(createdAt).inMinutes;
-    final time = mins < 60
-        ? '${mins}m'
-        : mins < 1440
-        ? '${mins ~/ 60}h'
-        : '${mins ~/ 1440}d';
+  String _meta(DateTime? createdAt, String locationText) {
+    String time = 'now';
+    if (createdAt != null) {
+      final now = DateTime.now();
+      final mins = now.difference(createdAt).inMinutes;
+      time = mins < 60
+          ? '${mins}m'
+          : mins < 1440
+          ? '${mins ~/ 60}h'
+          : '${mins ~/ 1440}d';
+    }
     return locationText.isEmpty ? time : '$time • $locationText';
   }
 
