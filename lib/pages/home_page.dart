@@ -7,6 +7,7 @@ import 'add_post_page.dart';
 import 'marine_map_page.dart';
 import 'feed_page.dart';
 import '../widgets/forecast_widget.dart';
+import '../pages/learn_fishing_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -31,7 +32,7 @@ class _HomePageState extends State<HomePage> {
       placeName: 'Stora Amundön',
       days: 5,
     ),
-    Center(child: Text('Tutorial')),
+    LearnFishingPage(), // 👈 ersätter Center(child: Text('Tutorial')),
   ];
 
   @override

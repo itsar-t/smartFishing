@@ -9,6 +9,7 @@ import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
 import 'pages/home_page.dart';
 import 'pages/login_page.dart';
 import 'pages/register_page.dart';
+import 'pages/learn_fishing_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
