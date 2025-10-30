@@ -56,7 +56,7 @@ class AccountAvatarMenu extends StatelessWidget {
                 Icon(Icons.person, size: 20, color: iconColor),
                 const SizedBox(width: 10),
                 Text(
-                  isGuest ? 'Profil (kräver konto)' : 'Profil',
+                  isGuest ? 'Profile (Account needed)' : 'Profile',
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurface,
                   ),
@@ -74,7 +74,7 @@ class AccountAvatarMenu extends StatelessWidget {
                   Icon(Icons.upgrade, size: 20, color: iconColor),
                   const SizedBox(width: 10),
                   Text(
-                    'Uppgradera konto…',
+                    'Upgrade Account',
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.onSurface,
                     ),
@@ -91,7 +91,7 @@ class AccountAvatarMenu extends StatelessWidget {
                 Icon(Icons.logout, size: 20, color: iconColor),
                 const SizedBox(width: 10),
                 Text(
-                  'Logga ut',
+                  'Sign Out',
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurface,
                   ),

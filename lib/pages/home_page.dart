@@ -8,6 +8,7 @@ import 'marine_map_page.dart';
 import 'feed_page.dart';
 import '../widgets/forecast_widget.dart';
 import '../pages/learn_fishing_page.dart';
+import 'licence_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -25,7 +26,7 @@ class _HomePageState extends State<HomePage> {
   final _pages = const [
     FeedPage(),
     MarineMapPage(),
-    Center(child: Text('License Page')),
+    LicencePage(),
     ForecastWidget(
       lat: 57.5818,
       lon: 11.9146,
@@ -101,7 +102,7 @@ class _HomePageState extends State<HomePage> {
             elevation: 0,
             actions: [
               // Visa + bara för icke-gäst
-              if (!isGuest)
+              if (!isGuest && _index == 0)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8.0),
                   child: TextButton.icon(
@@ -212,9 +213,9 @@ class _HomePageState extends State<HomePage> {
             items: const [
               BottomBarItem(icon: Icons.group, label: 'Records'),
               BottomBarItem(icon: Icons.place, label: 'Map'),
-              BottomBarItem(icon: Icons.add_shopping_cart, label: 'Licence'),
+              BottomBarItem(icon: Icons.add_shopping_cart, label: 'License'),
               BottomBarItem(icon: Icons.wb_sunny, label: 'Forecast'),
-              BottomBarItem(icon: Icons.menu_book, label: 'Tutorial'),
+              BottomBarItem(icon: Icons.menu_book, label: 'Learn'),
             ],
           ),
         );

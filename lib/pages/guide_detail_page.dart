@@ -3,17 +3,16 @@ import '../widgets/guide_blocks.dart';
 
 class GuideDetailPage extends StatelessWidget {
   final String title; // t.ex. "Tides"
-  final String headerImage; // stor toppbild (1:1 eller 16:9 funkar)
+  final String? headerImage; // stor toppbild (1:1 eller 16:9 funkar)
   final List<GuideBlock> blocks; // innehållet: sektioner och bilder
 
   const GuideDetailPage({
     super.key,
     required this.title,
-    required this.headerImage,
+    this.headerImage,
     required this.blocks,
   });
 
-  static const double _headerRadius = 16;
   static const double _hPad = 16;
 
   @override
@@ -33,15 +32,17 @@ class GuideDetailPage extends StatelessWidget {
           // 🔹 Toppbild (full-bleed känsla, med rundade hörn)
           // 🔹 Toppbild – full width, visar hela bilden (contain)
           // 🔹 Toppbild – fyller hela skärmens bredd och visar hela bilden
-          SizedBox(
-            width: double.infinity,
-            child: Image.asset(
-              headerImage,
-              fit: BoxFit
-                  .fitWidth, // skalar tills bredden fylls, behåller proportioner
-              alignment: Alignment.center,
+          if (headerImage != null && headerImage!.isNotEmpty) ...[
+            SizedBox(
+              width: double.infinity,
+              child: Image.asset(
+                headerImage!,
+                fit: BoxFit.fitWidth,
+                alignment: Alignment.center,
+              ),
             ),
-          ),
+            const SizedBox(height: 12),
+          ],
           const SizedBox(height: 12),
 
           // 🔹 Innehåll
@@ -57,6 +58,7 @@ class GuideDetailPage extends StatelessWidget {
               ],
             ),
           ),
+          const SizedBox(height: 16),
         ],
       ),
     );

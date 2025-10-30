@@ -194,7 +194,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             cursorWidth: 2.0,
                             decoration: _inputDecoration(
                               context,
-                              "Username (valfritt)",
+                              "Username (optional)",
                             ),
                           ),
                           const SizedBox(height: 16),

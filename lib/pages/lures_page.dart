@@ -11,15 +11,14 @@ class LurePage extends StatefulWidget {
 class _LurePageState extends State<LurePage> {
   final TextEditingController _search = TextEditingController();
 
-  // “Källan” för dina kort. Här kan du lägga till fler ämnen.
   final List<_Lure> _allTopics = const [
-    _Lure(title: 'Spoon Lure', image: 'assets/images/spoon.png'),
-    _Lure(title: 'Wobbler (Crankbait)', image: 'assets/images/wobbler.png'),
-    _Lure(title: 'Spoon Lure', image: 'assets/images/spoon.png'),
-    _Lure(title: 'Spoon Lure', image: 'assets/images/spoon.png'),
-    _Lure(title: 'Spoon Lure', image: 'assets/images/spoon.png'),
-    _Lure(title: 'Spoon Lure', image: 'assets/images/spoon.png'),
-    _Lure(title: 'Spoon Lure', image: 'assets/images/spoon.png'),
+    _Lure(title: 'Spoon Lures', image: 'assets/images/spoon_lure.png'),
+    _Lure(title: 'Wobblers (Crankbait)', image: 'assets/images/wobbler.png'),
+    _Lure(title: 'Spinners', image: 'assets/images/spinner.png'),
+    _Lure(title: 'Pirk Lures', image: 'assets/images/prik_lures.png'),
+    _Lure(title: 'Jigs & Softbaits', image: 'assets/images/jigs.png'),
+    _Lure(title: 'Bombarda Float', image: 'assets/images/bombarda_float.png'),
+    _Lure(title: 'Sabiki Fishing', image: 'assets/images/sabiki_fishing.png'),
   ];
 
   String _query = '';
@@ -62,33 +61,36 @@ class _LurePageState extends State<LurePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Learn about fishing'),
+        title: const Text('Lures'),
         backgroundColor: cs.surface,
         foregroundColor: cs.onSurface,
         elevation: 0,
       ),
       body: Column(
         children: [
-          // 🔎 Sökfältet under rubriken – precis som i din mock
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-            child: TextField(
-              controller: _search,
-              onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
-              textInputAction: TextInputAction.search,
-              decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.search),
-                hintText: 'Search lures…',
-                filled: true,
-                fillColor: cs.surfaceVariant.withOpacity(.5),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide.none,
-                ),
-              ),
+          SizedBox(
+            width: double.infinity,
+            child: Image.asset(
+              "assets/images/all_baits.png",
+              fit: BoxFit
+                  .fitWidth, // skalar tills bredden fylls, behåller proportioner
+              alignment: Alignment.center,
             ),
           ),
+          const SizedBox(height: 12),
 
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "There are many different types of lures, each with its own movement and purpose. The most common types are listed below.",
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
           // 🧱 Grid med kort – 2 kolumner som i din skiss
           // 🔽 Scrollbar yta: under sökfältet, ovanför bottombar
           Expanded(
