@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import '../widgets/fish_card.dart';
-// Om du vill öppna detaljsida kan du importera GuideDetailPage här.
+// Not used, this is for feature work
 
 class FishesPage extends StatelessWidget {
   const FishesPage({super.key});
 
-  // 🐟 Din “datakälla” – lägg till hur många du vill
   static const _fishes = <({String name, String asset})>[
     (name: 'Perch', asset: 'assets/images/fish/perch.png'),
     (name: 'Pike', asset: 'assets/images/fish/pike.png'),

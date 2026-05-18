@@ -13,7 +13,7 @@ class GoogleWeatherService {
   static const _hoursPath = '/v1/forecast/hours:lookup';
 
   String get _apiKey {
-    // Lägg API-nyckeln i .env (API_KEY=xxxx) eller i din säkra config
+    // Get key from .env
     final key = dotenv.env['GOOGLE_API_KEY'];
     if (key == null || key.isEmpty) {
       throw StateError('GOOGLE_WEATHER_API_KEY saknas. Lägg den i .env.');
@@ -35,7 +35,6 @@ class GoogleWeatherService {
       'days': days.toString(),
       'unitsSystem': unitsSystem,
       'languageCode': languageCode,
-      // tips: du kan även använda pageSize/pageToken om du vill paginera
     });
 
     final res = await _client.get(

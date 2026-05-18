@@ -33,7 +33,7 @@ class _HomePageState extends State<HomePage> {
       placeName: 'Stora Amundön',
       days: 5,
     ),
-    LearnFishingPage(), // 👈 ersätter Center(child: Text('Tutorial')),
+    LearnFishingPage(),
   ];
 
   @override
@@ -198,7 +198,6 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
 
-              // Din riktiga sida
               Expanded(
                 child: IndexedStack(index: _index, children: _pages),
               ),

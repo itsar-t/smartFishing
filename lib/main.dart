@@ -4,12 +4,9 @@ import 'utils/auth_gate.dart';
 import 'utils/firebase_options.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
-
-// ⬇️ Lägg till dessa imports så routes pekar rätt
 import 'pages/home_page.dart';
 import 'pages/login_page.dart';
 import 'pages/register_page.dart';
-import 'pages/learn_fishing_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -44,23 +41,21 @@ class MyApp extends StatelessWidget {
       title: 'SmartFishing',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFEBF0FC),
-        ), //.copyWith(primary: const Color(0xFF21005d)),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFEBF0FC)),
         useMaterial3: true,
       ),
 
-      // 🚪 Startar via AuthGate (visar rätt sida beroende på inloggning)
+      // Startar via AuthGate (visar rätt sida beroende på inloggning)
       home: const AuthGate(),
 
-      // 🗺️ Namngivna routes som din kod anropar på flera ställen
+      //Namngivna routes som din kod anropar på flera ställen
       routes: {
         '/login': (_) => const LoginPage(),
         '/register': (_) => const RegisterPage(),
         '/home': (_) => const HomePage(),
       },
 
-      // 🙏 Fallback om någon försöker navigera till en okänd route
+      // Fallback om någon försöker navigera till en okänd route
       onUnknownRoute: (settings) =>
           MaterialPageRoute(builder: (_) => const LoginPage()),
     );

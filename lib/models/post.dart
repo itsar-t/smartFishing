@@ -30,10 +30,10 @@ class Post {
       username: (d['username'] ?? '') as String,
       imageUrl: (d['imageUrl'] ?? '') as String,
       locationText: (d['locationText'] ?? '') as String,
-      description: (d['description'] ?? '') as String, // 👈 tom om saknas
+      description: (d['description'] ?? '') as String, //Tom om saknas
       createdAt: (d['createdAt'] is Timestamp)
           ? (d['createdAt'] as Timestamp).toDate()
-          : null, // 👈 null om inte satt än
+          : null, // null om inte satt än
       likesCount: (d['likesCount'] ?? 0) as int,
     );
   }

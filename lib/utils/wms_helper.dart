@@ -36,17 +36,6 @@ List<double> _lonLatToWebMercator(double lon, double lat) {
 }
 
 /// A simple TileProvider that builds WMS GetMap URLs per tile.
-///
-/// Example usage:
-/// TileLayer(
-///   tileProvider: WmsTileProvider(
-///     baseUrl: 'https://yourserver/wms',
-///     layers: 'layer_name',
-///     version: '1.3.0',
-///     format: 'image/png',
-///     transparent: true,
-///   ),
-/// )
 class WmsTileProvider extends TileProvider {
   final String baseUrl;
   final String layers;

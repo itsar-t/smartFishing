@@ -15,7 +15,7 @@ class LearnFishingPage extends StatefulWidget {
 class _LearnFishingPageState extends State<LearnFishingPage> {
   final TextEditingController _search = TextEditingController();
 
-  // “Källan” för dina kort. Här kan du lägga till fler ämnen.
+  // Out Topics
   final List<_Topic> _allTopics = const [
     _Topic(
       title: 'Conditions',
@@ -83,7 +83,6 @@ class _LearnFishingPageState extends State<LearnFishingPage> {
     super.dispose();
   }
 
-  // Exempel: Tides
   void openConditions(BuildContext context) {
     Navigator.push(
       context,
@@ -574,7 +573,7 @@ Illegal fishing: Fishing without permission is a crime and may result in fines o
             ),
           ),
 
-          // 🧱 Grid med kort – 2 kolumner som i din skiss
+          // 🧱 Grid med kort
           // 🔽 Scrollbar yta: under sökfältet, ovanför bottombar
           Expanded(
             child: Padding(

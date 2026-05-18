@@ -10,69 +10,6 @@ import 'package:smart_fishing/utils/wms_helper.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:smart_fishing/widgets/fish_info_card.dart';
 
-/*
-                  final double ringSize = 24 + (speed.clamp(0, 20) / 20.0) * 10;
-
-                  final centerMarker = MarkerLayer(
-                    markers: [
-                      Marker(
-                        point: _center,
-                        width: ringSize,
-                        height: ringSize,
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            // ring runt centrum (färgkodning enkel: grön/orange/röd)
-                            Container(
-                              width: ringSize,
-                              height: ringSize,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: speed < 4
-                                      ? Colors.green.shade600
-                                      : (speed < 8
-                                            ? Colors.orange.shade600
-                                            : Colors.red.shade600),
-                                  width: 2,
-                                ),
-                              ),
-                            ),
-                            Transform.rotate(
-                              angle: dirTo * math.pi / 180.0,
-                              child: Icon(
-                                Icons.arrow_upward,
-                                size: ringSize * 0.55,
-                                color: speed < 4
-                                    ? Colors.green.shade900
-                                    : (speed < 8
-                                          ? Colors.orange.shade900
-                                          : Colors.red.shade900),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  );
-
-                  return Stack(
-                    children: [
-                      centerMarker,
-
-                      // 3b) Overlay “Vind 8 m/s” uppe till vänster – som i din skiss
-                      Positioned(
-                        left: 12,
-                        top:
-                            12 +
-                            MediaQuery.of(
-                              context,
-                            ).padding.top, // under statusbaren
-                        child: _WindBadge(speedMs: speed, dirToDegrees: dirTo),
-                      ),
-                    ],
-                  );*/
-
 class _FishInfo {
   final String title, subtitle, description;
   final String? imageAsset;
@@ -92,20 +29,6 @@ class _MarineMapPageState extends State<MarineMapPage>
   final MapController _map = MapController();
   final _weather = GoogleWeatherService();
   late final AnimationController _compassController;
-
-  /* 
-  
-  Fishmarkers:
-
-  LatLng(57.58956161858295, 11.905371714058452),
-  LatLng(57.58743560379618, 11.906300101527918)
-
-  Suggested fish spots:
-
-  LatLng(57.587653688374466, 11.905524122990151)
-  LatLng(57.589749749351036, 11.904368953523138)
-
-*/
 
   // --- UI/State ---
 
@@ -136,7 +59,6 @@ class _MarineMapPageState extends State<MarineMapPage>
   _FishInfo? _currentFish; // data som FishInfoCard visar
 
   _FishInfo _infoForPoint(LatLng p) {
-    // quick & dirty exempel; lägg ev. en riktig modell
     final k0 = _ptKey(fishMarkers[0]);
     final k1 = _ptKey(fishMarkers[1]);
     final k = _ptKey(p);
@@ -199,7 +121,6 @@ Needlefish have firm, white meat and are delicious grilled or pan-fried. Remove 
 
   // Depth overlay comes from a public demo WMS (used for examples).
   // The demo WMS server may embed a promotional QR watermark into tiles.
-  // Default to off so users don't see the QR code; toggle with the layers button.
   bool _showDepth = true;
   bool _loadingLocation = false;
   double? _gpsAccuracy;
@@ -642,7 +563,7 @@ Needlefish have firm, white meat and are delicious grilled or pan-fried. Remove 
                               // Tap a fish: select it. If you tap the same again, toggle back (optional).
                               _selectedFishKey = isSelected ? null : key;
                             });
-                            // Here is where you can open your info panel/bottom sheet if you want.
+                            // info panel/bottom sheet
                             if (!isSelected) _openFishInfoFor(p);
                           },
                           child: AnimatedSwitcher(
@@ -862,8 +783,8 @@ Needlefish have firm, white meat and are delicious grilled or pan-fried. Remove 
                 ),
               ),
             ),
+
           // --- Fish info panel ---
-          // --- Fish info panel (edge-to-edge, inga rundningar här) ---
           AnimatedPositioned(
             duration: const Duration(milliseconds: 240),
             curve: Curves.easeOut,

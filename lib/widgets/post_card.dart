@@ -6,7 +6,7 @@ class PostCard extends StatefulWidget {
   final String username;
   final String meta; // e.g. "2h • Hovås – Sea"
   final ImageProvider image; // NetworkImage / AssetImage
-  final String? description; // 👈 NYTT: valfritt
+  final String? description;
   final VoidCallback? onFollow;
   final VoidCallback? onOverflow;
   final VoidCallback? onLike;
@@ -36,9 +36,7 @@ class _PostCardState extends State<PostCard> {
   bool _expanded = false;
 
   // Enkel heuristik för “lång text” (undvik dyra layoutmätningar).
-  bool get _isLong =>
-      (widget.description?.trim().length ?? 0) >
-      140; // justera gräns om du vill
+  bool get _isLong => (widget.description?.trim().length ?? 0) > 140;
 
   @override
   Widget build(BuildContext context) {

@@ -33,7 +33,7 @@ class _LurePageState extends State<LurePage> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final screenWidth = MediaQuery.of(context).size.width;
-    // Samma sidopadding som du använder kring griden:
+    // Samma sidopadding som används i gridden
     const horizontalPadding = 12.0;
     // Spacing mellan kolumnerna:
     const crossSpacing = 12.0;
@@ -91,7 +91,7 @@ class _LurePageState extends State<LurePage> {
             ),
           ),
           const SizedBox(height: 12),
-          // 🧱 Grid med kort – 2 kolumner som i din skiss
+          // 🧱 Grid med kort
           // 🔽 Scrollbar yta: under sökfältet, ovanför bottombar
           Expanded(
             child: Padding(

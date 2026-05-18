@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class LureCard extends StatelessWidget {
-  final String imagePath; // kvadratisk bild (1:1 rekommenderas)
+  final String imagePath; // kvadratisk bild
   final String title;
   final VoidCallback? onTap;
 

@@ -99,7 +99,7 @@ class _LoginPageState extends State<LoginPage> {
         context,
       ).showSnackBar(const SnackBar(content: Text("Logged in as guest")));
 
-      // Navigera till din huvudskärm
+      // Navigera to homescreen
       Navigator.pushReplacementNamed(context, '/home');
     } on FirebaseAuthException catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -114,7 +114,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Background is your theme primary (dark blue in your setup)
+      // Background our primary
       backgroundColor: Theme.of(context).colorScheme.primary,
       appBar: AppBar(
         title: const Text(""),
@@ -287,7 +287,6 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   // Small helper to avoid repeating identical InputDecoration code.
-  // Tip: extracted so that you can tweak styling in one place.
   InputDecoration _inputDecoration(BuildContext context, String label) {
     return InputDecoration(
       labelText: label,
