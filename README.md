@@ -30,7 +30,7 @@ A cross-platform mobile application built with Flutter that helps recreational a
 
 ## Screenshots
 
-> *Coming soon*
+![SmartFishing Screenshots](assets/screenshots/screenshots.png)
 
 ---
 
